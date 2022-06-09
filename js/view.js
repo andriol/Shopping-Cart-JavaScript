@@ -1,6 +1,8 @@
 export default class View {
-  constructor(root) {
+  constructor(root, { activeProduct } = {}) {
     this.root = root;
+    this.activeProduct = activeProduct;
+    this.price = {};
     this.root.innerHTML = `
     <div class="body">
     <div class="card">
@@ -12,7 +14,7 @@ export default class View {
                 <h4><b>Shopping Cart</b></h4>
               </div>
               <div class="col align-self-center text-right text-muted">
-                3 items
+               
               </div>
             </div>
           </div>
@@ -54,14 +56,15 @@ export default class View {
     </div>
     </div>`;
   }
+
   _renderProductsHTML(image, title, description, index, price) {
-    return ` <div class="row main align-items-center">
+    return ` <div class="row main align-items-center" data-id=${index + 1}>
          <div class="col-2"><img class="img-fluid" src=${image} alt='product title'/></div>
             <div class="col">
                 <div class="row text-muted">${title}</div>
                     <div class="row">${description}</div>
                         </div>
-                    <div class="col" data-id=${index + 1}>
+                    <div class="col" >
                 <a class='decrease'>-</a><input class="numberstyle" min="1" step="1" type='number' value="1"><a class='increase'>+<a/>
             </div>
           <div class="col">&euro; <span class='price'>${price}</span> <span class="close">&#10005;</span></div>
@@ -84,10 +87,19 @@ export default class View {
     }
     const increases = this.root.querySelectorAll('.increase');
     const decreases = this.root.querySelectorAll('.decrease');
+    const prices = this.root.querySelectorAll('.price');
+
     decreases.forEach((decrease) => {
       decrease.addEventListener('click', (e) => {
-        console.log(e.target);
         if (e.target.nextElementSibling.value > 0) {
+          prices.forEach((price) => {
+            if (
+              price.parentElement.parentElement.parentElement.dataset.id ===
+              e.path[2].attributes[1].value
+            ) {
+              price.innerHTML = (price.innerHTML - this.price).toFixed(2);
+            }
+          });
           e.target.nextElementSibling.value--;
         } else {
         }
@@ -95,9 +107,31 @@ export default class View {
     });
     increases.forEach((increase) => {
       increase.addEventListener('click', (e) => {
-        console.log(e.target.previousElementSibling.value);
-        e.target.previousElementSibling.value++;
+        prices.forEach((price) => {
+          if (
+            price.parentElement.parentElement.parentElement.dataset.id ===
+            e.path[2].attributes[1].value
+          ) {
+            this.activeProduct(e.path[2].attributes[1].value);
+            price.innerHTML = (
+              this.price *
+              (e.target.previousElementSibling.value++ + 1)
+            ).toFixed(2);
+          }
+        });
       });
     });
+  }
+  getElement(product) {
+    this.price = product.price;
+  }
+
+  async productList(products) {
+    const productsLength = this.root.querySelector('.text-muted');
+    this.products = await products;
+    productsLength.insertAdjacentHTML(
+      'beforeend',
+      `${this.products.length} Items`
+    );
   }
 }

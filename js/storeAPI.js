@@ -3,9 +3,7 @@ export default class StoreAPI {
     const url = 'https://fakestoreapi.com/products';
     try {
       const response = await fetch(url);
-      console.log(response);
       const data = await response.json();
-      console.log(data);
       return data;
     } catch (error) {
       console.log(error);
