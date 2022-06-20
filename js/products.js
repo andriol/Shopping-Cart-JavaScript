@@ -12,23 +12,30 @@ export default class Products {
 
   _renderProducts() {
     StoreAPI.getProducts().then((data) => {
-      this._getAllProducts(data);
+      if (data) {
+        this._getAllProducts(data);
+      }
     });
   }
   _getAllProducts(products) {
     this.products = products;
     this.view.getProductsList(products);
-    this.view.productList(products);
+    this.view.productCount(products);
   }
   _activeProduct(product) {
     this.product = product;
     this.view.getElement(product);
   }
+
   _handlers() {
     return {
       activeProduct: (id) => {
         const product = this.products.find((product) => product.id == id);
         this._activeProduct(product);
+      },
+      deleteProduct: (id) => {
+        StoreAPI.deleteProduct(id);
+        this._renderProducts();
       },
     };
   }

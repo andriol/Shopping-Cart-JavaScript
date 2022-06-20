@@ -1,8 +1,9 @@
+import StoreAPI from './storeAPI.js';
 export default class View {
-  constructor(root, { activeProduct } = {}) {
+  constructor(root, { activeProduct, deleteProduct } = {}) {
     this.root = root;
     this.activeProduct = activeProduct;
-    this.price = {};
+    this.deleteProduct = deleteProduct;
     this.root.innerHTML = `
     <div class="body">
     <div class="card">
@@ -57,8 +58,8 @@ export default class View {
     </div>`;
   }
 
-  _renderProductsHTML(image, title, description, index, price) {
-    return ` <div class="row main align-items-center" data-id=${index + 1}>
+  _renderProductsHTML(image, title, description, id, price) {
+    return ` <div class="row main align-items-center" data-id=${id}>
          <div class="col-2"><img class="img-fluid" src=${image} alt='product title'/></div>
             <div class="col">
                 <div class="row text-muted">${title}</div>
@@ -74,12 +75,13 @@ export default class View {
   getProductsList(products) {
     const productsList = this.root.querySelector('.border-bottom');
     productsList.innerHTML = '';
-    for (const [index, product] of products.entries()) {
+    for (const product of products) {
+      console.log(product);
       const html = this._renderProductsHTML(
         product.image,
         product.title,
         product.description,
-        index,
+        product.id,
         product.price
       );
 
@@ -91,7 +93,7 @@ export default class View {
 
     decreases.forEach((decrease) => {
       decrease.addEventListener('click', (e) => {
-        if (e.target.nextElementSibling.value > 0) {
+        if (e.target.nextElementSibling.value > 1) {
           prices.forEach((price) => {
             if (
               price.parentElement.parentElement.parentElement.dataset.id ===
@@ -102,6 +104,7 @@ export default class View {
           });
           e.target.nextElementSibling.value--;
         } else {
+          this.deleteProduct(e.path[2].dataset.id);
         }
       });
     });
@@ -125,13 +128,8 @@ export default class View {
   getElement(product) {
     this.price = product.price;
   }
-
-  async productList(products) {
+  productCount(products) {
     const productsLength = this.root.querySelector('.text-muted');
-    this.products = await products;
-    productsLength.insertAdjacentHTML(
-      'beforeend',
-      `${this.products.length} Items`
-    );
+    productsLength.innerHTML = `${products.length} Items`;
   }
 }
