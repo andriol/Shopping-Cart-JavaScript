@@ -1,9 +1,15 @@
-import StoreAPI from './storeAPI.js';
 export default class View {
-  constructor(root, { activeProduct, deleteProduct } = {}) {
+  constructor(
+    root,
+    { activeProduct, deleteProduct, editProduct, getTotal, totalAmount } = {}
+  ) {
     this.root = root;
     this.activeProduct = activeProduct;
     this.deleteProduct = deleteProduct;
+    this.editProduct = editProduct;
+    this.getTotal = getTotal;
+    this.totalAmount = totalAmount;
+    this.products = [];
     this.root.innerHTML = `
     <div class="body">
     <div class="card">
@@ -33,8 +39,8 @@ export default class View {
           </div>
           <hr />
           <div class="row">
-            <div class="col" style="padding-left: 0"></div>
-            <div class="col text-right">&euro;</div>
+            <div class="col count" style="padding-left: 0"></div>
+            <div class="col total text-right"> </div>
           </div>
           <form>
             <p>SHIPPING</p>
@@ -49,7 +55,7 @@ export default class View {
             style="border-top: 1px solid rgba(0, 0, 0, 0.1); padding: 2vh 0"
           >
             <div class="col">TOTAL PRICE</div>
-            <div class="col text-right">&euro;</div>
+            <div class="col total-price text-right">&euro;</div>
           </div>
           <button class="btn">CHECKOUT</button>
         </div>
@@ -58,7 +64,15 @@ export default class View {
     </div>`;
   }
 
-  _renderProductsHTML(image, title, description, id, price) {
+  _renderProductsHTML(
+    image,
+    title,
+    description,
+    amount,
+    id,
+    price,
+    totalPrice
+  ) {
     return ` <div class="row main align-items-center" data-id=${id}>
          <div class="col-2"><img class="img-fluid" src=${image} alt='product title'/></div>
             <div class="col">
@@ -66,23 +80,25 @@ export default class View {
                     <div class="row">${description}</div>
                         </div>
                     <div class="col" >
-                <a class='decrease'>-</a><input class="numberstyle" min="1" step="1" type='number' value="1"><a class='increase'>+<a/>
+                <a class='decrease'>-</a><input class="numberstyle"  min="1" step="1" type='number' value="${amount}"><a class='increase'>+<a/>
             </div>
-          <div class="col">&euro; <span class='price'>${price}</span> <span class="close">&#10005;</span></div>
+          <div class="col">&euro; <span class='price'>${totalPrice}</span> <span class="close">&#10005;</span></div>
         </div>`;
   }
 
-  getProductsList(products) {
+  getProductsList() {
     const productsList = this.root.querySelector('.border-bottom');
+    const products = JSON.parse(localStorage.getItem('products') || '[]');
     productsList.innerHTML = '';
     for (const product of products) {
-      console.log(product);
       const html = this._renderProductsHTML(
         product.image,
         product.title,
         product.description,
+        product.amount,
         product.id,
-        product.price
+        product.price,
+        product.totalPrice
       );
 
       productsList.insertAdjacentHTML('beforeend', html);
@@ -95,14 +111,17 @@ export default class View {
       decrease.addEventListener('click', (e) => {
         if (e.target.nextElementSibling.value > 1) {
           prices.forEach((price) => {
+            console.log(e, price);
             if (
               price.parentElement.parentElement.parentElement.dataset.id ===
               e.path[2].attributes[1].value
             ) {
-              price.innerHTML = (price.innerHTML - this.price).toFixed(2);
+              e.target.nextElementSibling.value--;
+              this.activeProduct(e.path[2].attributes[1].value);
+              this.editProduct(e.target.nextElementSibling.value--);
+              price.innerHTML = this.product;
             }
           });
-          e.target.nextElementSibling.value--;
         } else {
           this.deleteProduct(e.path[2].dataset.id);
         }
@@ -116,10 +135,8 @@ export default class View {
             e.path[2].attributes[1].value
           ) {
             this.activeProduct(e.path[2].attributes[1].value);
-            price.innerHTML = (
-              this.price *
-              (e.target.previousElementSibling.value++ + 1)
-            ).toFixed(2);
+            this.editProduct(e.target.previousElementSibling.value++ + 1);
+            price.innerHTML = this.product;
           }
         });
       });
@@ -129,7 +146,25 @@ export default class View {
     this.price = product.price;
   }
   productCount(products) {
+    this.products = products;
     const productsLength = this.root.querySelector('.text-muted');
+    const prductsCount = this.root.querySelector('.count');
+    const amount = this.totalAmount(products);
+
     productsLength.innerHTML = `${products.length} Items`;
+
+    prductsCount.innerHTML = `ITEMS ${amount}`;
+  }
+  totalValue(products) {
+    const totalAmount = this.root.querySelector('.total');
+    const totalPrice = this.root.querySelector('.total-price');
+    const total = this.getTotal(products);
+
+    totalAmount.innerHTML = `&euro; ${total
+      .toFixed(2)
+      .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
+    totalPrice.innerHTML = `&euro; ${(total + 5)
+      .toFixed(2)
+      .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
   }
 }

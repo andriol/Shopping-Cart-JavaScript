@@ -12,15 +12,18 @@ export default class Products {
 
   _renderProducts() {
     StoreAPI.getProducts().then((data) => {
+      console.log(data);
       if (data) {
         this._getAllProducts(data);
       }
     });
+    window.addEventListener('DOMContentLoaded', this.view.getProductsList());
   }
   _getAllProducts(products) {
     this.products = products;
     this.view.getProductsList(products);
     this.view.productCount(products);
+    this.view.totalValue(products);
   }
   _activeProduct(product) {
     this.product = product;
@@ -30,12 +33,35 @@ export default class Products {
   _handlers() {
     return {
       activeProduct: (id) => {
-        const product = this.products.find((product) => product.id == id);
+        const product = StoreAPI.getSingleProduct(id);
         this._activeProduct(product);
       },
       deleteProduct: (id) => {
         StoreAPI.deleteProduct(id);
         this._renderProducts();
+      },
+      editProduct: (amount) => {
+        StoreAPI.updateProduct({
+          id: this.product.id,
+          amount,
+        });
+        this._renderProducts();
+      },
+      getTotal(products) {
+        const total = products.reduce((total, product) => {
+          total += product.totalPrice;
+          return total;
+        }, 0);
+
+        return total;
+      },
+      totalAmount(products) {
+        const total = products.reduce((total, amount) => {
+          total += amount.amount;
+          return total;
+        }, 0);
+
+        return total;
       },
     };
   }
