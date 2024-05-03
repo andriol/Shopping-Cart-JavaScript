@@ -2,6 +2,7 @@ export default class StoreAPI {
   static async getProducts() {
     const url = 'https://fakestoreapi.com/products';
     const products = JSON.parse(localStorage.getItem('products'));
+
     try {
       if (!products) {
         const response = await fetch(url);

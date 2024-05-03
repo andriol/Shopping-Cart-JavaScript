@@ -1,7 +1,14 @@
 export default class View {
   constructor(
     root,
-    { activeProduct, deleteProduct, editProduct, getTotal, totalAmount } = {}
+    {
+      activeProduct,
+      deleteProduct,
+      editProduct,
+      getTotal,
+      totalAmount,
+      getTotalWithDelivery,
+    } = {}
   ) {
     this.root = root;
     this.activeProduct = activeProduct;
@@ -9,30 +16,33 @@ export default class View {
     this.editProduct = editProduct;
     this.getTotal = getTotal;
     this.totalAmount = totalAmount;
+    this.getTotalWithDelivery = getTotalWithDelivery;
     this.products = [];
+    this.selectedDeliveryCost = 5;
+    this.parentElement = '';
     this.root.innerHTML = `
     <div class="body">
-    <div class="card">
+     <div class="card">
       <div class="row">
-        <div class="col-md-8 cart">
+       <div class="col-md-8 cart">
           <div class="title">
             <div class="row">
               <div class="col">
                 <h4><b>Shopping Cart</b></h4>
               </div>
               <div class="col align-self-center text-right text-muted">
-               
-              </div>
+               </div>
             </div>
           </div>
           <div class="row border-top border-bottom" id="scrollable">
          
           </div>
           <div class="back-to-shop">
-            <a href="#">&leftarrow;</a
+            <a href="/Shopping-Cart-JavaScript/cart.html">&leftarrow;</a
             ><span class="text-muted">Back to shop</span>
           </div>
         </div>
+      
         <div class="col-md-4 summary">
           <div>
             <h5><b>Summary</b></h5>
@@ -44,8 +54,9 @@ export default class View {
           </div>
           <form>
             <p>SHIPPING</p>
-            <select>
-              <option class="text-muted">Standard-Delivery- &euro;5.00</option>
+            <select id="deliveryOptions">
+              <option class="text-muted" value='5'>Standard-Delivery- &euro;5.00</option>
+              <option class="text-muted" value='15'>Express-Delivery- &euro;15.00</option>
             </select>
             <p>GIVE CODE</p>
             <input id="code" placeholder="Enter your code" />
@@ -82,7 +93,8 @@ export default class View {
                     <div class="col" >
                 <a class='decrease'>-</a><input class="numberstyle"  min="1" step="1" type='number' value="${amount}"><a class='increase'>+<a/>
             </div>
-          <div class="col">&euro; <span class='price'>${totalPrice}</span> <span class="close">&#10005;</span></div>
+          <div class="col">&euro; <span class='price'>${totalPrice}</span> <span 
+      class="close">&#10005;</span></div>
         </div>`;
   }
 
@@ -106,37 +118,42 @@ export default class View {
     const increases = this.root.querySelectorAll('.increase');
     const decreases = this.root.querySelectorAll('.decrease');
     const prices = this.root.querySelectorAll('.price');
-
+    const deletes = this.root.querySelectorAll('.close');
+    deletes.forEach((deleteButton) => {
+      deleteButton.addEventListener('click', (e) => {
+        const parentElement = e.target.closest('[data-id]');
+        this.deleteProduct(parentElement.dataset.id);
+      });
+    });
     decreases.forEach((decrease) => {
       decrease.addEventListener('click', (e) => {
+        const parentElement = e.target.closest('[data-id]');
         if (e.target.nextElementSibling.value > 1) {
           prices.forEach((price) => {
-            console.log(e, price);
             if (
               price.parentElement.parentElement.parentElement.dataset.id ===
-              e.path[2].attributes[1].value
+              parentElement.dataset.id
             ) {
               e.target.nextElementSibling.value--;
-              this.activeProduct(e.path[2].attributes[1].value);
+              this.activeProduct(parentElement.dataset.id);
               this.editProduct(e.target.nextElementSibling.value--);
-              price.innerHTML = this.product;
             }
           });
         } else {
-          this.deleteProduct(e.path[2].dataset.id);
+          this.deleteProduct(parentElement.dataset.id);
         }
       });
     });
     increases.forEach((increase) => {
       increase.addEventListener('click', (e) => {
+        const parentElement = e.target.closest('[data-id]');
         prices.forEach((price) => {
           if (
             price.parentElement.parentElement.parentElement.dataset.id ===
-            e.path[2].attributes[1].value
+            parentElement.dataset.id
           ) {
-            this.activeProduct(e.path[2].attributes[1].value);
+            this.activeProduct(parentElement.dataset.id);
             this.editProduct(e.target.previousElementSibling.value++ + 1);
-            price.innerHTML = this.product;
           }
         });
       });
@@ -155,16 +172,31 @@ export default class View {
 
     prductsCount.innerHTML = `ITEMS ${amount}`;
   }
+
   totalValue(products) {
     const totalAmount = this.root.querySelector('.total');
     const totalPrice = this.root.querySelector('.total-price');
-    const total = this.getTotal(products);
+    const selectElement = document.getElementById('deliveryOptions');
 
-    totalAmount.innerHTML = `&euro; ${total
-      .toFixed(2)
-      .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
-    totalPrice.innerHTML = `&euro; ${(total + 5)
-      .toFixed(2)
-      .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
+    // Function to update total price based on selected delivery option
+    const updateTotalPrice = () => {
+      const total = this.getTotal(products);
+      const totalAndDelivery = total + this.selectedDeliveryCost;
+      totalAmount.innerHTML = `&euro; ${total
+        .toFixed(2)
+        .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
+      totalPrice.innerHTML = `&euro; ${totalAndDelivery
+        .toFixed(2)
+        .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
+    };
+
+    // Add event listener to update selected delivery cost
+    selectElement.addEventListener('change', (e) => {
+      this.selectedDeliveryCost = Number(e.target.value);
+      updateTotalPrice();
+    });
+
+    // Initial rendering
+    updateTotalPrice();
   }
 }

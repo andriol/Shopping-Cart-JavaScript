@@ -7,10 +7,12 @@
   font-size: 0.8rem;
   font-weight: bold;
 }
+
 .title {
   margin-bottom: 5vh;
 }
 .card {
+  position: relative;
   margin: auto;
   max-width: 950px;
   width: 90%;

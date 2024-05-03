@@ -6,13 +6,12 @@ export default class Products {
     this.root = root;
     this.products = [];
     this.product = {};
-    this.view = new View(root, this._handlers());
+    this.view = new View(root, this._handlers(), this.products);
     this._renderProducts();
   }
 
   _renderProducts() {
     StoreAPI.getProducts().then((data) => {
-      console.log(data);
       if (data) {
         this._getAllProducts(data);
       }
@@ -62,6 +61,13 @@ export default class Products {
         }, 0);
 
         return total;
+      },
+      getTotalWithDelivery(products, delivery) {
+        const total = products.reduce((total, product) => {
+          total += product.totalPrice;
+          return total;
+        }, 0);
+        return total + delivery;
       },
     };
   }
