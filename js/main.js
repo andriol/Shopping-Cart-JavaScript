@@ -1,3 +1,4 @@
-import Products from './products.js';
+import App from './products.js';
 
-new Products(document.getElementById('app'));
+const root = document.getElementById('app');
+const app = new App(root);
