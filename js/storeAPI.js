@@ -12,9 +12,7 @@ export default class StoreAPI {
           amount: 1,
           totalPrice: item.price,
         }));
-
         localStorage.setItem('products', JSON.stringify(product));
-
         return product;
       }
     } catch (error) {

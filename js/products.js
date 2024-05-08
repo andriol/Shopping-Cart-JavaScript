@@ -6,7 +6,7 @@ export default class Products {
     this.root = root;
     this.products = [];
     this.product = {};
-    this.view = new View(root, this._handlers(), this.products);
+    this.view = new View(root, this._handlers());
     this._renderProducts();
   }
 
